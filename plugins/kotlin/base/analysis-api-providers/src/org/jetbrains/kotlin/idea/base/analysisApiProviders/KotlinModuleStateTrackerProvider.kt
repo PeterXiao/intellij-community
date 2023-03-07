@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.libraries.Library
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.workspaceModel.ide.WorkspaceModelChangeListener
 import com.intellij.workspaceModel.ide.WorkspaceModelTopics
 import com.intellij.workspaceModel.ide.impl.legacyBridge.library.findLibraryBridge
@@ -38,6 +39,7 @@ class KotlinModuleStateTrackerProvider(project: Project) : Disposable {
     private val libraryCache = ConcurrentHashMap<Library, ModuleStateTrackerImpl>()
     private val sourceModuleCache = ConcurrentHashMap<Module, ModuleStateTrackerImpl>()
     private val sdkCache = ConcurrentHashMap<Sdk, ModuleStateTrackerImpl>()
+    private val scriptCache = ConcurrentHashMap<VirtualFile, ModuleStateTrackerImpl>()
 
     fun getModuleStateTrackerFor(module: KtModule): KtModuleStateTracker {
         return when (module) {
@@ -63,6 +65,13 @@ class KotlinModuleStateTrackerProvider(project: Project) : Disposable {
 
             is KtLibrarySourceModule -> getModuleStateTrackerFor(module.binaryLibrary)
             is KtNotUnderContentRootModule -> ModuleStateTrackerImpl() // TODO need proper cache?
+
+            is KtScriptDependencyModule -> ModuleStateTrackerImpl()
+
+            is KtScriptModule -> {
+                val virtualFile = module.file.virtualFile ?: error("Script ${module.file} does not have a backing 'VirtualFile'")
+                scriptCache.computeIfAbsent(virtualFile) { ModuleStateTrackerImpl() }
+            }
         }
     }
 
