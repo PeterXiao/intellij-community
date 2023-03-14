@@ -1,1 +1,1 @@
-call git clone git://git.jetbrains.org/idea/android.git android
+call git clone --depth 1 --branch 231 git@github.com:JetBrains/android.git android
