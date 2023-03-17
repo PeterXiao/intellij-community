@@ -34,10 +34,14 @@ abstract class GroupedComboBoxRenderer<T>(val combo: ComboBox<T>) : GroupedEleme
     myRendererComponent.add(mySeparatorComponent, BorderLayout.NORTH)
     val centerComponent: JComponent = object : NonOpaquePanel(itemComponent) {
       override fun getPreferredSize(): Dimension {
-        val dimension = UIUtil.updateListRowHeight(super.getPreferredSize())
-        return when (maxWidth) {
-          -1 -> dimension
-          else -> Dimension(maxWidth, dimension.height)
+        return super.getPreferredSize().let {
+          if (maxWidth > 0) it.width = maxWidth
+          it.height = JBUI.CurrentTheme.List.rowHeight()
+          if (!ExperimentalUI.isNewUI()) {
+            val insets = ComboBoxPopup.COMBO_ITEM_BORDER.borderInsets
+            it.height += insets.bottom + insets.top
+          }
+          UIUtil.updateListRowHeight(it)
         }
       }
     }
